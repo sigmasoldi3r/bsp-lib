@@ -1,13 +1,16 @@
+use bytemuck::{Pod, Zeroable};
+
 use crate::math::Vector3D;
 
-pub enum BspPlaneType {
-  X = 0,
-  Y = 1,
-  Z = 2,
-  AnyX = 3,
-  AnyY = 4,
-  AnyZ = 5
-}
+#[derive(Clone, Copy, Debug, Zeroable, Pod)]
+#[repr(C)]
+pub struct BspPlaneType(pub i32);
+pub const X: BspPlaneType = BspPlaneType(0);
+pub const Y: BspPlaneType = BspPlaneType(1);
+pub const Z: BspPlaneType = BspPlaneType(2);
+pub const ANY_X: BspPlaneType = BspPlaneType(3);
+pub const ANY_Y: BspPlaneType = BspPlaneType(4);
+pub const ANY_Z: BspPlaneType = BspPlaneType(5);
 
 /// **Each of this structures defines
 /// a plane in 3-dimensional space by using
@@ -22,11 +25,13 @@ pub enum BspPlaneType {
 /// plane is perpendicular to the x axis. If nType equals
 /// PLANE_ANYX, then the plane's normal is nearer to the x axis
 /// then to any other axis. This information is used by the
-/// renderer to speed up some computations. 
+/// renderer to speed up some computations.
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+#[repr(C)]
 pub struct BspPlane {
-  pub v_normal: Vector3D,
-  pub f_dist: f32,
-  pub n_type: BspPlaneType
+    pub v_normal: Vector3D,
+    pub f_dist: f32,
+    pub n_type: BspPlaneType,
 }
 
 pub struct BspPlanesLump(pub Vec<BspPlane>);

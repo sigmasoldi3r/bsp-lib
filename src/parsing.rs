@@ -1,9 +1,10 @@
 use std::{
     io::{self, Read, Seek},
-    num::TryFromIntError, string::FromUtf8Error,
+    num::TryFromIntError,
+    string::FromUtf8Error,
 };
 
-use bytemuck::from_bytes;
+use bytemuck::{from_bytes, try_cast_slice, PodCastError};
 use peg::{error::ParseError, str::LineCol};
 
 use crate::{
@@ -13,7 +14,14 @@ use crate::{
         LUMP_LEAVES, LUMP_LIGHTING, LUMP_MARKSURFACES, LUMP_MODELS, LUMP_NODES, LUMP_PLANES,
         LUMP_SURFEDGES, LUMP_TEXINFO, LUMP_TEXTURES, LUMP_VERTICES, LUMP_VISIBILITY,
     },
-    lumps::entities::{self, BspEntitiesLump, BspEntity},
+    lumps::{
+        entities::{BspEntitiesLump, BspEntity},
+        nodes::BspNodesLump,
+        planes::{BspPlane, BspPlanesLump},
+        textures::{BspMipTex, BspMipTexOffset, BspTextureHeader, BspTexturesLump},
+        vertices::BspVerticesLump,
+        vis::BspVisLump,
+    },
 };
 
 #[derive(Debug)]
@@ -23,10 +31,18 @@ pub enum BspParseError {
     BadStringValue(FromUtf8Error),
     EntityLumpParseError(ParseError<LineCol>),
     GenericError(io::Error),
+    DeserializationError(PodCastError),
 }
 
 pub fn extract(read: &mut dyn Read, buffer: &mut Vec<u8>) -> Result<(), BspParseError> {
     read.read_exact(buffer).map_err(BspParseError::GenericError)
+}
+
+pub fn extract_struct<T: bytemuck::Pod>(read: &mut dyn Read) -> Result<T, BspParseError> {
+    let mut buffer = vec![0u8; std::mem::size_of::<T>()];
+    extract(read, &mut buffer)?;
+    let result: &T = from_bytes(&buffer);
+    Ok(result.to_owned())
 }
 
 pub fn seek_ptr(read: &mut dyn Seek, ptr: &BspLumpPointer) -> Result<u64, BspParseError> {
@@ -36,6 +52,21 @@ pub fn seek_ptr(read: &mut dyn Seek, ptr: &BspLumpPointer) -> Result<u64, BspPar
             .map_err(BspParseError::BadPointerValue)?,
     ))
     .map_err(BspParseError::GenericError)
+}
+
+pub fn seek_and_extract<T: Read + Seek>(
+    read: &mut T,
+    ptr: &BspLumpPointer,
+) -> Result<Vec<u8>, BspParseError> {
+    seek_ptr(read, ptr)?;
+    let mut buffer = vec![
+        0u8;
+        (ptr.n_length - 1)
+            .try_into()
+            .map_err(BspParseError::BadPointerValue)?
+    ];
+    extract(read, &mut buffer)?;
+    Ok(buffer)
 }
 
 /// Extracts an owned instance of the BSP header.
@@ -57,18 +88,18 @@ peg::parser! {
         pub rule entities() -> Vec<BspEntity>
             = e:entity()+ _
             { e }
-        
+
         pub rule entity() -> BspEntity
             = _ "{" _ kv:kv_pairs() "}" _
             { BspEntity(kv) }
-        
+
         rule kv_pairs() -> Vec<(String, String)>
             = kv_pair()*
 
         rule kv_pair() -> (String, String)
             =  "\"" key:string() "\"" _ "\"" value:string() "\"" _
             { (key.into(), value.into()) }
-        
+
         rule string() -> String
             = value:$([^'"']+) { value.into() }
 
@@ -76,31 +107,99 @@ peg::parser! {
     }
 }
 
-impl BspEntitiesLump {
+trait PtrLumpReader {
+    fn read_from_ptr<T>(read: &mut T, ptr: &BspLumpPointer) -> Result<Self, BspParseError>
+    where
+        T: Seek + Read,
+        Self: Sized;
+}
+
+impl PtrLumpReader for BspEntitiesLump {
     fn read_from_ptr<T>(read: &mut T, ptr: &BspLumpPointer) -> Result<Self, BspParseError>
     where
         T: Seek + Read,
     {
-        seek_ptr(read, ptr)?;
-        let mut buffer = vec![
-            0u8;
-            (ptr.n_length-1)
-                .try_into()
-                .map_err(BspParseError::BadPointerValue)?
-        ];
-        extract(read, &mut buffer)?;
+        let buffer = seek_and_extract(read, ptr)?;
         let raw = String::from_utf8(buffer).map_err(BspParseError::BadStringValue)?;
-        // if let Err(err) = entity_descriptor::entities(raw.as_str()).map_err(BspParseError::EntityLumpParseError) {
-        //     if let BspParseError::EntityLumpParseError(err) = err {
-        //         let o = err.location.offset;
-        //         let len = raw.len();
-        //         let s = &raw[0..1];
-        //         let ex = err.expected;
-        //         println!("\n{o}/{len}\n---\n{s}\n---\n{ex}\n---");
-        //     }
-        // }
-        let entities = entity_descriptor::entities(raw.as_str()).map_err(BspParseError::EntityLumpParseError)?;
+        let entities = entity_descriptor::entities(raw.as_str())
+            .map_err(BspParseError::EntityLumpParseError)?;
         Ok(BspEntitiesLump(entities))
+    }
+}
+
+impl PtrLumpReader for BspPlanesLump {
+    fn read_from_ptr<T>(read: &mut T, ptr: &BspLumpPointer) -> Result<Self, BspParseError>
+    where
+        T: Seek + Read,
+        Self: Sized,
+    {
+        let buffer = seek_and_extract(read, ptr)?;
+        let planes: &[BspPlane] =
+            try_cast_slice(&buffer).map_err(BspParseError::DeserializationError)?;
+        Ok(BspPlanesLump(planes.to_owned()))
+    }
+}
+
+impl PtrLumpReader for BspTexturesLump {
+    fn read_from_ptr<T>(read: &mut T, ptr: &BspLumpPointer) -> Result<Self, BspParseError>
+    where
+        T: Seek + Read,
+        Self: Sized,
+    {
+        seek_ptr(read, ptr)?;
+        let header: BspTextureHeader = extract_struct(read)?;
+        let count = header
+            .n_mip_textures
+            .try_into()
+            .map_err(BspParseError::BadPointerValue)?;
+        let mut mip_tex_offsets: Vec<BspMipTexOffset> = Vec::with_capacity(count);
+        for i in 0..header.n_mip_textures {
+            let value: BspMipTexOffset = extract_struct(read)?;
+            mip_tex_offsets.push(value);
+        }
+        let mut textures: Vec<BspMipTex> = Vec::with_capacity(count);
+        for index in mip_tex_offsets {
+            let offset = index.0 + ptr.n_offset;
+            read.seek(io::SeekFrom::Start(
+                offset.try_into().map_err(BspParseError::BadPointerValue)?,
+            ))
+            .map_err(BspParseError::GenericError)?;
+            let mip: BspMipTex = extract_struct(read)?;
+            textures.push(mip);
+        }
+        Ok(BspTexturesLump(textures))
+    }
+}
+
+impl PtrLumpReader for BspVerticesLump {
+    fn read_from_ptr<T>(read: &mut T, ptr: &BspLumpPointer) -> Result<Self, BspParseError>
+    where
+        T: Seek + Read,
+        Self: Sized,
+    {
+        // let buffer = [0u8; MAX_MAP_VERTS.0];
+        // TODO: WHAT THE HECK MAN? How do I read this?
+        Ok(BspVerticesLump(vec![]))
+    }
+}
+
+impl PtrLumpReader for BspVisLump {
+    fn read_from_ptr<T>(read: &mut T, ptr: &BspLumpPointer) -> Result<Self, BspParseError>
+    where
+        T: Seek + Read,
+        Self: Sized,
+    {
+        Ok(BspVisLump(vec![]))
+    }
+}
+
+impl PtrLumpReader for BspNodesLump {
+    fn read_from_ptr<T>(read: &mut T, ptr: &BspLumpPointer) -> Result<Self, BspParseError>
+    where
+        T: Seek + Read,
+        Self: Sized,
+    {
+        todo!()
     }
 }
 
@@ -126,7 +225,12 @@ impl Bsp {
         let surfedges_ptr = header.lump[LUMP_SURFEDGES.0];
         let models_ptr = header.lump[LUMP_MODELS.0];
         let entities = BspEntitiesLump::read_from_ptr(read, &entities_ptr)?;
-        println!("{:?}", entities);
+        let planes = BspPlanesLump::read_from_ptr(read, &planes_ptr)?;
+        let textures = BspTexturesLump::read_from_ptr(read, &textures_ptr)?;
+        let vertices = BspVerticesLump::read_from_ptr(read, &vertices_ptr)?;
+        let vis = BspVisLump::read_from_ptr(read, &visibility_ptr)?;
+        println!("{:?}", textures);
+        let nodes = BspNodesLump::read_from_ptr(read, &nodes_ptr)?;
         todo!()
         // Ok(Box::new(Bsp {
         //     entities: BspEntitiesLump::read(&mut read, &entities_ptr)?,
