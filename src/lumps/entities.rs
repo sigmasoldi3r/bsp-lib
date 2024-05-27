@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct BspEntity(pub Vec<(String, String)>);
 
 pub const MAX_KEY: usize = 32;
@@ -32,4 +33,5 @@ pub const MAX_VALUE: usize = 1024;
 /// #define MAX_KEY     32
 /// #define MAX_VALUE   1024
 /// ```
+#[derive(Debug)]
 pub struct BspEntitiesLump(pub Vec<BspEntity>);

@@ -39,7 +39,6 @@ use crate::lumps::{
 /// >
 /// > Are the formats used by Counter-Strike Neo, Counter-Strike Nexon: Studio, 
 /// > and Cry of Fear different from BSP30?
-
 pub struct Bsp {
   pub entities: BspEntitiesLump,
   pub planes: BspPlanesLump,
