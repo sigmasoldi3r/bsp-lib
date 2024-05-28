@@ -1,4 +1,5 @@
 // TODO: This might need some work?
+#[derive(Debug)]
 pub struct BspVis;
 
 /// # VIS
@@ -17,4 +18,5 @@ pub struct BspVis;
 /// > poorly optimized (several hours) and is also done by a separate compiler. It 
 /// > can therefore be skipped when compiling the map, resulting in BSP files with 
 /// > no VIS data at all!
+#[derive(Debug)]
 pub struct BspVisLump(pub Vec<BspVis>);

@@ -10,14 +10,21 @@ use bytemuck::from_bytes;
 
 use crate::{
     bsp::Bsp,
-    header::{
-        BspHeader, LUMP_CLIPNODES, LUMP_EDGES, LUMP_ENTITIES, LUMP_FACES, LUMP_LEAVES,
-        LUMP_LIGHTING, LUMP_MARKSURFACES, LUMP_MODELS, LUMP_NODES, LUMP_PLANES, LUMP_SURFEDGES,
-        LUMP_TEXINFO, LUMP_TEXTURES, LUMP_VERTICES, LUMP_VISIBILITY,
-    },
+    header::BspHeader,
     lumps::{
-        entities::BspEntitiesLump, nodes::BspNodesLump, planes::BspPlanesLump,
-        textures::BspTexturesLump, vertices::BspVerticesLump, vis::BspVisLump,
+        clip_nodes::BspClipNodesLump,
+        entities::BspEntitiesLump,
+        faces::BspFacesLump,
+        leaves::BspLeavesLump,
+        light_map::BspLightMapLump,
+        models::BspModelsLump,
+        nodes::BspNodesLump,
+        planes::BspPlanesLump,
+        surfaces::{BspEdgesLump, BspMarkSurfacesLump, BspSurfEdgesLump},
+        tex_info::BspTexInfoLump,
+        textures::BspTexturesLump,
+        vertices::BspVerticesLump,
+        vis::BspVisLump,
     },
 };
 use decoding::*;
@@ -37,36 +44,43 @@ impl Bsp {
         Ok(data.clone())
     }
 
-    pub fn parse<T>(read: &mut T) -> Result<Box<Self>, BspParseError>
-    where
-        T: Seek + Read,
-    {
+    /// # BSP Bulk Parsing
+    ///
+    /// Extracts the whole BSP to memory, you can extract granular data by using
+    /// `BspHeader::extract_lump` and `Bsp::extract_header` manually.
+    pub fn parse<T: Seek + Read>(read: &mut T) -> Result<Box<Self>, BspParseError> {
         let header = Self::extract_header(read)?;
-        let entities_ptr = header.lump[LUMP_ENTITIES.0];
-        let planes_ptr = header.lump[LUMP_PLANES.0];
-        let textures_ptr = header.lump[LUMP_TEXTURES.0];
-        let vertices_ptr = header.lump[LUMP_VERTICES.0];
-        let visibility_ptr = header.lump[LUMP_VISIBILITY.0];
-        let nodes_ptr = header.lump[LUMP_NODES.0];
-        let texinfo_ptr = header.lump[LUMP_TEXINFO.0];
-        let faces_ptr = header.lump[LUMP_FACES.0];
-        let lighting_ptr = header.lump[LUMP_LIGHTING.0];
-        let clipnodes_ptr = header.lump[LUMP_CLIPNODES.0];
-        let leaves_ptr = header.lump[LUMP_LEAVES.0];
-        let marksurfaces_ptr = header.lump[LUMP_MARKSURFACES.0];
-        let edges_ptr = header.lump[LUMP_EDGES.0];
-        let surfedges_ptr = header.lump[LUMP_SURFEDGES.0];
-        let models_ptr = header.lump[LUMP_MODELS.0];
-        let entities = BspEntitiesLump::read_from_ptr(read, &entities_ptr)?;
-        let planes = BspPlanesLump::read_from_ptr(read, &planes_ptr)?;
-        let textures = BspTexturesLump::read_from_ptr(read, &textures_ptr)?;
-        let vertices = BspVerticesLump::read_from_ptr(read, &vertices_ptr)?;
-        let vis = BspVisLump::read_from_ptr(read, &visibility_ptr)?;
-        println!("{:?}", textures);
-        let nodes = BspNodesLump::read_from_ptr(read, &nodes_ptr)?;
-        todo!()
-        // Ok(Box::new(Bsp {
-        //     entities: BspEntitiesLump::read(&mut read, &entities_ptr)?,
-        // }))
+        let entities: BspEntitiesLump = header.extract_lump(read)?;
+        let planes: BspPlanesLump = header.extract_lump(read)?;
+        let textures: BspTexturesLump = header.extract_lump(read)?;
+        let vertices: BspVerticesLump = header.extract_lump(read)?;
+        let vis: BspVisLump = header.extract_lump(read)?;
+        let nodes: BspNodesLump = header.extract_lump(read)?;
+        let tex_info: BspTexInfoLump = header.extract_lump(read)?;
+        let faces: BspFacesLump = header.extract_lump(read)?;
+        let light_map: BspLightMapLump = header.extract_lump(read)?;
+        let clip_nodes: BspClipNodesLump = header.extract_lump(read)?;
+        let leaves: BspLeavesLump = header.extract_lump(read)?;
+        let mark_surfaces: BspMarkSurfacesLump = header.extract_lump(read)?;
+        let edges: BspEdgesLump = header.extract_lump(read)?;
+        let surf_edges: BspSurfEdgesLump = header.extract_lump(read)?;
+        let models: BspModelsLump = header.extract_lump(read)?;
+        Ok(Box::new(Bsp {
+            entities,
+            planes,
+            textures,
+            vertices,
+            vis,
+            nodes,
+            tex_info,
+            faces,
+            light_map,
+            clip_nodes,
+            leaves,
+            mark_surfaces,
+            edges,
+            surf_edges,
+            models,
+        }))
     }
 }

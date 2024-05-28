@@ -1,3 +1,7 @@
+use bytemuck::{Pod, Zeroable};
+
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
+#[repr(C)]
 pub struct BspLeafContent(pub i32);
 pub const CONTENTS_EMPTY: BspLeafContent = BspLeafContent(-1);
 pub const CONTENTS_SOLID: BspLeafContent = BspLeafContent(-2);
@@ -15,6 +19,8 @@ pub const CONTENTS_CURRENT_UP: BspLeafContent = BspLeafContent(-13);
 pub const CONTENTS_CURRENT_DOWN: BspLeafContent = BspLeafContent(-14);
 pub const CONTENTS_TRANSLUCENT: BspLeafContent = BspLeafContent(-15);
 
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
+#[repr(C)]
 pub struct BspLeaf {
   pub n_contents: BspLeafContent,
   pub n_vis_offset: i32,
@@ -72,4 +78,5 @@ pub struct BspLeaf {
 /// are looped through during the rendering process and point to the actual 
 /// faces. The final 4 bytes specify the volume of ambient sounds in Quake, but 
 /// are unused in GoldSrc.
+#[derive(Debug)]
 pub struct BspLeavesLump(pub Vec<BspLeaf>);

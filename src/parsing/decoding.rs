@@ -26,6 +26,14 @@ pub trait PtrLumpReader {
         Self: Sized;
 }
 
+pub trait LumpExtractor<Lump: Sized + PtrLumpReader> {
+    fn get_pointer(&self) -> BspLumpPointer;
+    fn extract_lump<T: Seek + Read>(&self, read: &mut T) -> Result<Lump, BspParseError> {
+        let vis_ptr = self.get_pointer();
+        Lump::read_from_ptr(read, &vis_ptr)
+    }
+}
+
 pub fn seek_and_extract<T: Read + Seek>(
     read: &mut T,
     ptr: &BspLumpPointer,

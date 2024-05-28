@@ -1,3 +1,7 @@
+use bytemuck::{Pod, Zeroable};
+
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
+#[repr(C)]
 pub struct BspMarkSurface(pub u16);
 
 /// # Marksurfaces
@@ -11,8 +15,11 @@ pub struct BspMarkSurface(pub u16);
 /// This lump is a simple table for redirecting the marksurfaces indexes in the 
 /// leafs to the actual face indexes. A leaf inserts its marksurface indexes into 
 /// this array and gets the associated faces contained within this leaf.
+#[derive(Debug)]
 pub struct BspMarkSurfacesLump(pub Vec<BspMarkSurface>);
 
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
+#[repr(C)]
 pub struct BspEdge {
   pub i_vertex: [u16; 2]
 }
@@ -29,8 +36,11 @@ pub struct BspEdge {
 ///
 /// The edges delimit the face and further refer to the vertices of the face. 
 /// Each edge is pointing to the start and end vertex of the edge.
-pub struct BspEdgesLump();
+#[derive(Debug)]
+pub struct BspEdgesLump(pub Vec<BspEdge>);
 
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
+#[repr(C)]
 pub struct BspSurfEdge(pub i32);
 
 /// # Surfedges
@@ -48,4 +58,5 @@ pub struct BspSurfEdge(pub i32);
 /// of the surfedge is positive, the first vertex of the edge is used as a vertex 
 /// for rendering the face; otherwise, the value is multiplied by -1 and the 
 /// second vertex of the indexed edge is used.
-pub struct BspSurfEdgesLump();
+#[derive(Debug)]
+pub struct BspSurfEdgesLump(pub Vec<BspSurfEdge>);

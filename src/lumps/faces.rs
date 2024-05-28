@@ -1,3 +1,7 @@
+use bytemuck::{Pod, Zeroable};
+
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
+#[repr(C)]
 pub struct BspFace {
   pub i_plane: u16,
   pub n_plane_side: u16,
@@ -39,4 +43,5 @@ pub struct BspFace {
 /// lighting information (partly used by the renderer to hide sky surfaces). 
 /// Finally, we have an offset in bytes giving the beginning of the binary 
 /// lightmap data of this face in the lighting lump.
+#[derive(Debug)]
 pub struct BspFacesLump(pub Vec<BspFace>);

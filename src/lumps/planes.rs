@@ -34,4 +34,5 @@ pub struct BspPlane {
     pub n_type: BspPlaneType,
 }
 
+#[derive(Debug)]
 pub struct BspPlanesLump(pub Vec<BspPlane>);

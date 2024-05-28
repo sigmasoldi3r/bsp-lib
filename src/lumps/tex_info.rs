@@ -1,12 +1,21 @@
+use bytemuck::{Pod, Zeroable};
+
 use crate::math::Vector3D;
 
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
+#[repr(C)]
 pub struct TexInfo {
-  pub v_s: Vector3D,
-  pub f_s_shift: f32,
-  pub v_t: Vector3D,
-  pub f_t_shift: f32,
-  pub i_miptex: u32,
-  pub n_flags: u32
+  pub texture_s: TextureVector,
+  pub texture_t: TextureVector,
+  pub miptex_index: u32,
+  pub texture_flags: u32
+}
+
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
+#[repr(C)]
+pub struct TextureVector {
+  vector: Vector3D,
+  shift: f32
 }
 
 /// # Texinfo
@@ -32,4 +41,5 @@ pub struct TexInfo {
 /// Finally, there are 4 bytes used for flags. Only one flag is used by the 
 /// vanilla engine, being 0x1 for disabling lightmaps and subdivision for the 
 /// surface (used by sky and liquids).
+#[derive(Debug)]
 pub struct BspTexInfoLump(pub Vec<TexInfo>);

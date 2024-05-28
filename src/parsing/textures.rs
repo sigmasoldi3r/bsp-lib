@@ -1,11 +1,18 @@
 use std::io::{Read, Seek, SeekFrom};
 
+use bytemuck::try_cast_slice;
+
 use crate::{
-    header::BspLumpPointer,
-    lumps::textures::{BspMipTex, BspMipTexOffset, BspTextureHeader, BspTexturesLump},
+    header::{BspHeader, BspLumpPointer, LUMP_TEXINFO, LUMP_TEXTURES},
+    lumps::{
+        tex_info::{BspTexInfoLump, TexInfo},
+        textures::{BspMipTex, BspMipTexOffset, BspTextureHeader, BspTexturesLump},
+    },
 };
 
-use super::{extract_struct, seek_ptr, BspParseError, PtrLumpReader};
+use super::{
+    extract_struct, seek_and_extract, seek_ptr, BspParseError, LumpExtractor, PtrLumpReader,
+};
 
 impl PtrLumpReader for BspTexturesLump {
     fn read_from_ptr<T>(read: &mut T, ptr: &BspLumpPointer) -> Result<Self, BspParseError>
@@ -35,5 +42,28 @@ impl PtrLumpReader for BspTexturesLump {
             textures.push(mip);
         }
         Ok(BspTexturesLump(textures))
+    }
+}
+impl LumpExtractor<BspTexturesLump> for BspHeader {
+    fn get_pointer(&self) -> BspLumpPointer {
+        self.lump[LUMP_TEXTURES.0]
+    }
+}
+
+impl PtrLumpReader for BspTexInfoLump {
+    fn read_from_ptr<T>(read: &mut T, ptr: &BspLumpPointer) -> Result<Self, BspParseError>
+    where
+        T: Seek + Read,
+        Self: Sized,
+    {
+        let buffer = seek_and_extract(read, ptr)?;
+        let tex_info_entries: &[TexInfo] =
+            try_cast_slice(&buffer).map_err(BspParseError::DeserializationError)?;
+        Ok(BspTexInfoLump(tex_info_entries.to_owned()))
+    }
+}
+impl LumpExtractor<BspTexInfoLump> for BspHeader {
+    fn get_pointer(&self) -> BspLumpPointer {
+        self.lump[LUMP_TEXINFO.0]
     }
 }
