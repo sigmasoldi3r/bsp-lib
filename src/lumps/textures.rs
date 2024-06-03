@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use bytemuck::{Pod, Zeroable};
 
 /// The texture lump is somehow a bit more complex than
@@ -28,7 +30,11 @@ pub struct BspMipTex {
 }
 impl BspMipTex {
     pub fn name(&self) -> String {
-        let first = self.sz_name.iter().position(|&x| x == 0).unwrap_or(self.sz_name.len());
+        let first = self
+            .sz_name
+            .iter()
+            .position(|&x| x == 0)
+            .unwrap_or(self.sz_name.len());
         String::from_utf8_lossy(&self.sz_name[..first]).into_owned()
     }
 }
@@ -88,3 +94,11 @@ impl std::fmt::Debug for BspMipTex {
 /// within the texture lump relative to the beginning of its BSPMIPTEX struct.
 #[derive(Debug)]
 pub struct BspTexturesLump(pub Vec<BspMipTex>);
+
+impl Index<usize> for BspTexturesLump {
+    type Output = BspMipTex;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}

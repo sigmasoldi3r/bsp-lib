@@ -1,6 +1,6 @@
 use std::fs::File;
 
-use crate::bsp::Bsp;
+use crate::{bsp::Bsp, lumps::vertices};
 
 
 const TEST_MAP: &'static str = "maps/crossfire.bsp";
@@ -9,8 +9,11 @@ const TEST_MAP: &'static str = "maps/crossfire.bsp";
 fn test_face_relation_functions() {
   let mut file = File::open(TEST_MAP).unwrap();
   let bsp = Bsp::parse(&mut file).unwrap();
-  let edges = bsp.faces.0[0].edges(&bsp);
-  println!("Edges = {:?}", edges);
-  let vertices = edges[1].vertices(&bsp);
-  println!("Edges[0]/Vertices = {:?}", vertices);
+  for face in &bsp.faces.0 {
+    if let Some(edges) = face.edges(&bsp) {
+      for edge in edges {
+        let _ = edge.vertices(&bsp);
+      }
+    }
+  }
 }

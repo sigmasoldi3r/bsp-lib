@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use bytemuck::{Pod, Zeroable};
 
 use crate::math::Vector3D;
@@ -36,3 +38,11 @@ pub struct BspPlane {
 
 #[derive(Debug)]
 pub struct BspPlanesLump(pub Vec<BspPlane>);
+
+impl Index<usize> for BspPlanesLump {
+    type Output = BspPlane;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}

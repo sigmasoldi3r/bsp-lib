@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use bytemuck::{Pod, Zeroable};
 
 use crate::math::Vector3D;
@@ -19,3 +21,11 @@ pub struct BspVertex(pub Vector3D);
 /// by giving its three coordinates.
 #[derive(Debug)]
 pub struct BspVerticesLump(pub Vec<BspVertex>);
+
+impl Index<usize> for BspVerticesLump {
+    type Output = BspVertex;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}

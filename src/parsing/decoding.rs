@@ -41,7 +41,7 @@ pub fn seek_and_extract<T: Read + Seek>(
     seek_ptr(read, ptr)?;
     let mut buffer = vec![
         0u8;
-        (ptr.n_length)
+        ptr.n_length
             .try_into()
             .map_err(BspParseError::BadPointerValue)?
     ];

@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use bytemuck::{Pod, Zeroable};
 
 use crate::{header::MAX_MAP_HULLS, math::Vector3D};
@@ -47,3 +49,11 @@ pub struct BspModel {
 #[derive(Debug)]
 
 pub struct BspModelsLump(pub Vec<BspModel>);
+
+impl Index<usize> for BspModelsLump {
+    type Output = BspModel;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}

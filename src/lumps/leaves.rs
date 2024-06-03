@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use bytemuck::{Pod, Zeroable};
 
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
@@ -22,18 +24,18 @@ pub const CONTENTS_TRANSLUCENT: BspLeafContent = BspLeafContent(-15);
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct BspLeaf {
-  pub n_contents: BspLeafContent,
-  pub n_vis_offset: i32,
-  pub n_mins: [i16; 3],
-  pub n_maxs: [i16; 3],
-  pub i_fist_mark_surface: u16,
-  pub n_mark_surfaces: u16,
-  pub n_ambient_levels: [u8; 4]
+    pub n_contents: BspLeafContent,
+    pub n_vis_offset: i32,
+    pub n_mins: [i16; 3],
+    pub n_maxs: [i16; 3],
+    pub i_fist_mark_surface: u16,
+    pub n_mark_surfaces: u16,
+    pub n_ambient_levels: [u8; 4],
 }
 
 /// # Leaves
 ///
-/// The leaves lump contains the leaves of the BSP tree. Another array of binary 
+/// The leaves lump contains the leaves of the BSP tree. Another array of binary
 /// structs:
 ///
 /// ```c
@@ -59,24 +61,32 @@ pub struct BspLeaf {
 ///     int32_t nContents;                         // Contents enumeration
 ///     int32_t nVisOffset;                        // Offset into visibility lump
 ///     int16_t nMins[3], nMaxs[3];                // Defines bounding box
-///     uint16_t iFirstMarkSurface, nMarkSurfaces; // Index and count into 
+///     uint16_t iFirstMarkSurface, nMarkSurfaces; // Index and count into
 ///                                                // marksurfaces array
 ///     uint8_t nAmbientLevels[4];                 // Ambient sound levels
 /// } BSPLEAF;
 /// ```
 ///
-/// The first entry of this struct is the type of the content of this leaf. It 
-/// can be one of the predefined values, found in the compiler source codes, and 
-/// is little relevant for the actual rendering process. All the more important 
-/// is the next integer containing the offset into the vis lump. It defines the 
-/// start of the raw PVS data for this leaf. If this value equals -1, no VIS 
-/// lists are available for this leaf, usually if the map has been built without 
-/// the VIS compiler. The next two 16-bit integer triples span the bounding box 
-/// of this leaf. Furthermore, the struct contains an index pointing into the 
-/// array of marksurfaces loaded from the marksurfaces lump as well as the 
-/// number of consecutive marksurfaces belonging to this leaf. The marksurfaces 
-/// are looped through during the rendering process and point to the actual 
-/// faces. The final 4 bytes specify the volume of ambient sounds in Quake, but 
+/// The first entry of this struct is the type of the content of this leaf. It
+/// can be one of the predefined values, found in the compiler source codes, and
+/// is little relevant for the actual rendering process. All the more important
+/// is the next integer containing the offset into the vis lump. It defines the
+/// start of the raw PVS data for this leaf. If this value equals -1, no VIS
+/// lists are available for this leaf, usually if the map has been built without
+/// the VIS compiler. The next two 16-bit integer triples span the bounding box
+/// of this leaf. Furthermore, the struct contains an index pointing into the
+/// array of marksurfaces loaded from the marksurfaces lump as well as the
+/// number of consecutive marksurfaces belonging to this leaf. The marksurfaces
+/// are looped through during the rendering process and point to the actual
+/// faces. The final 4 bytes specify the volume of ambient sounds in Quake, but
 /// are unused in GoldSrc.
 #[derive(Debug)]
 pub struct BspLeavesLump(pub Vec<BspLeaf>);
+
+impl Index<usize> for BspLeavesLump {
+    type Output = BspLeaf;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}
