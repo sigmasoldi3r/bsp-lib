@@ -4,6 +4,10 @@ use crate::{
 };
 
 impl BspFace {
+    /// # Vertices from a face
+    ///
+    /// This function extracts references to the vertices related to
+    /// this face.
     pub fn vertices<'a>(&self, bsp: &'a Bsp) -> Vec<&'a BspVertex> {
         let i_first_edge = self.i_first_edge as usize;
         let n_edges = (self.i_first_edge + self.n_edges as u32) as usize;
@@ -23,4 +27,13 @@ impl BspFace {
         }
         vertices
     }
+}
+
+impl Bsp {
+    /// # Brushes iterator
+    ///
+    /// This function provides an iterator of descriptors,
+    /// that contain all the data you'll need to describe
+    /// each brush in the map.
+    pub fn brushes(&self) -> () {}
 }
