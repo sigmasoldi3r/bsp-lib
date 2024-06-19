@@ -8,3 +8,7 @@ edition = "2021"
 [dependencies]
 bytemuck = { version = "1.16.0", features = ["derive"] }
 peg = "0.8.3"
+
+[dev-dependencies]
+rstest = "0.21.0"
+rstest_reuse = "0.7.0"

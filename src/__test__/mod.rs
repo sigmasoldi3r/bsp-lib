@@ -1,5 +1,7 @@
 mod relations;
 
+use rstest::*;
+use rstest_reuse::{self, *};
 use std::fs::File;
 
 use crate::{
@@ -19,127 +21,135 @@ use crate::{
         vertices::BspVerticesLump,
         vis::BspVisLump,
     },
-    parsing::decoding::LumpExtractor,
+    parsing::decoding::{BspParseError, LumpExtractor},
 };
 
-const TEST_MAP: &'static str = "maps/crossfire.bsp";
+#[template]
+#[rstest]
+#[case("maps/crossfire.bsp")]
+#[case("maps/frenzy.bsp")]
+#[case("maps/snark_pit.bsp")]
+#[case("maps/stalkyard.bsp")]
+#[case("maps/undertow.bsp")]
+#[case("maps/c1a0.bsp")]
+fn test_maps(#[case] map: &str) {}
 
-#[test]
-fn test_entities() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_entities(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let entities: BspEntitiesLump = header.extract_lump(&mut file).unwrap();
-    println!("entities = {:?}", entities.0[0]);
+    let entities: Result<BspEntitiesLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(entities.is_ok());
 }
 
-#[test]
-fn test_planes() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_planes(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let planes: BspPlanesLump = header.extract_lump(&mut file).unwrap();
-    println!("planes = {:?}", planes.0[0]);
+    let planes: Result<BspPlanesLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(planes.is_ok());
 }
 
-#[test]
-fn test_textures() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_textures(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let textures: BspTexturesLump = header.extract_lump(&mut file).unwrap();
-    println!("textures = {:?}", textures.0[0]);
+    let textures: Result<BspTexturesLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(textures.is_ok());
 }
 
-#[test]
-fn test_vertices() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_vertices(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let vertices: BspVerticesLump = header.extract_lump(&mut file).unwrap();
-    println!("vertices = {:?}", vertices.0[0]);
+    let vertices: Result<BspVerticesLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(vertices.is_ok());
 }
 
-#[test]
-fn test_vis() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_vis(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let vis: BspVisLump = header.extract_lump(&mut file).unwrap();
-    println!("vis = {:?}", vis);
+    let vis: Result<BspVisLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(vis.is_ok());
 }
 
-#[test]
-fn test_nodes() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_nodes(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let nodes: BspNodesLump = header.extract_lump(&mut file).unwrap();
-    println!("nodes = {:?}", nodes.0[0]);
+    let nodes: Result<BspNodesLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(nodes.is_ok());
 }
 
-#[test]
-fn test_tex_info() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_tex_info(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let tex_info: BspTexInfoLump = header.extract_lump(&mut file).unwrap();
-    println!("tex_info = {:?}", tex_info.0[0]);
+    let tex_info: Result<BspTexInfoLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(tex_info.is_ok());
 }
 
-#[test]
-fn test_faces() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_faces(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let faces: BspFacesLump = header.extract_lump(&mut file).unwrap();
-    println!("faces = {:?}", faces.0[0]);
+    let faces: Result<BspFacesLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(faces.is_ok());
 }
 
-#[test]
-fn test_light_map() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_light_map(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let light_map: BspLightMapLump = header.extract_lump(&mut file).unwrap();
-    println!("light_map = {:?}", light_map.0[0]);
+    let light_map: Result<BspLightMapLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(light_map.is_ok());
 }
 
-#[test]
-fn test_clip_nodes() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_clip_nodes(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let clip_nodes: BspClipNodesLump = header.extract_lump(&mut file).unwrap();
-    println!("clip_nodes = {:?}", clip_nodes.0[0]);
+    let clip_nodes: Result<BspClipNodesLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(clip_nodes.is_ok());
 }
 
-#[test]
-fn test_leaves() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_leaves(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let leaves: BspLeavesLump = header.extract_lump(&mut file).unwrap();
-    println!("leaves = {:?}", leaves.0[0]);
+    let leaves: Result<BspLeavesLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(leaves.is_ok());
 }
 
-#[test]
-fn test_mark_surfaces() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_mark_surfaces(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let mark_surfaces: BspMarkSurfacesLump = header.extract_lump(&mut file).unwrap();
-    println!("mark_surfaces = {:?}", mark_surfaces.0[0]);
+    let mark_surfaces: Result<BspMarkSurfacesLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(mark_surfaces.is_ok());
 }
 
-#[test]
-fn test_edges() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_edges(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let edges: BspEdgesLump = header.extract_lump(&mut file).unwrap();
-    println!("edges = {:?}", edges.0[0]);
+    let edges: Result<BspEdgesLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(edges.is_ok());
 }
 
-#[test]
-fn test_surf_edges() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_surf_edges(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let surf_edges: BspSurfEdgesLump = header.extract_lump(&mut file).unwrap();
-    println!("surf_edges = {:?}", surf_edges.0[0]);
+    let surf_edges: Result<BspSurfEdgesLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(surf_edges.is_ok());
 }
 
-#[test]
-fn test_models() {
-    let mut file = File::open(TEST_MAP).unwrap();
+#[apply(test_maps)]
+fn test_models(#[case] map: &str) {
+    let mut file = File::open(map).unwrap();
     let header = Bsp::extract_header(&mut file).unwrap();
-    let models: BspModelsLump = header.extract_lump(&mut file).unwrap();
-    println!("models = {:?}", models.0[0]);
+    let models: Result<BspModelsLump, BspParseError> = header.extract_lump(&mut file);
+    assert!(models.is_ok());
 }
