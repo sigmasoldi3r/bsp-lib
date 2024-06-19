@@ -2,5 +2,8 @@
   "editor.formatOnPaste": true,
   "editor.formatOnSave": true,
   "editor.formatOnType": true,
-  "editor.indentSize": 4
+  "editor.indentSize": 4,
+  "[markdown]": {
+    "editor.formatOnSave": false
+  }
 }

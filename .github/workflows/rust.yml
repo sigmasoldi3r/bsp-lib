@@ -2,9 +2,12 @@ name: Rust
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ ]
+    # branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+    # Disabled until I find a way to download the required maps for testing without breaking the EULA/TOS from Valve
+    # branches: [ "main" ]
+    branches: [ ]
 
 env:
   CARGO_TERM_COLOR: always

@@ -1,5 +1,7 @@
 # BSP parsing library
 
+![Tests](https://github.com/sigmasoldi3r/bsp-lib/actions/workflows/rust.yml/badge.svg)
+
 > [!WARNING]
 > Work in progress
 
