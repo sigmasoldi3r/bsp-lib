@@ -1,6 +1,7 @@
 # BSP parsing library
 
-![Tests](https://github.com/sigmasoldi3r/bsp-lib/actions/workflows/rust.yml/badge.svg)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/sigmasoldi3r/bsp-lib/rust.yml?style=for-the-badge&logo=rust)]([https://img.shields.io/github/actions/workflow/status/sigmasoldi3r/bsp-lib/rust.yml?style=for-the-badge&logo=rust](https://github.com/sigmasoldi3r/bsp-lib/actions/workflows/rust.yml))
+[![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/sigmasoldi3r/bsp-lib?style=for-the-badge&logo=github)](https://github.com/sigmasoldi3r/bsp-lib/issues)
 
 > [!WARNING]
 > Work in progress
